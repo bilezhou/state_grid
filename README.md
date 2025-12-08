@@ -1,4 +1,5 @@
-HassBox的state_grid集成与ARC-MX的sgcc_electricity_new（https://github.com/ARC-MX/sgcc_electricity_new）粗暴的结合一起，主打一个能用就行。  
+HassBox的state_grid集成与ARC-MX的sgcc_electricity_new：https://github.com/ARC-MX/sgcc_electricity_new  
+粗暴的结合一起，主打一个能用就行。  
 逻辑是用sgcc_electricity_new的识别来登录国网，然后用state_grid的接口来调数据。  
 账号密码登录。    
 使用方式：将整个state_grid复制到custom_components内就行  
