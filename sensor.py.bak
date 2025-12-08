@@ -5,16 +5,24 @@ from homeassistant.components.sensor import (
     SensorStateClass,
 )
 from homeassistant.config_entries import ConfigEntry
+    # 注意：如果你 HA 版本较老，UnitOfEnergy 可能在不同位置，保持和现在你的环境一致即可
 from homeassistant.const import UnitOfEnergy
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
+
 import datetime
+
 from .const import DOMAIN, VERSION
 from .data_client import StateGridDataClient
 from .coordinator import StateGridCoordinator
+
 UNIT_YUAN = "元"
+
 ENTITY_ID_SENSOR_FORMAT = SENSOR_DOMAIN + ".state_grid_"
+
+# ================== 传感器类型定义（按照原版补全） ==================
+
 SENSOR_TYPES = [
     {
         "key": "balance",
@@ -82,6 +90,7 @@ SENSOR_TYPES = [
     {
         "key": "last_month_meter_num",
         "name": "上个月抄表",
+        # 原版这里是有 state_class 的
         "state_class": SensorStateClass.TOTAL,
     },
     {
@@ -154,6 +163,7 @@ SENSOR_TYPES = [
         "device_class": SensorDeviceClass.ENERGY,
         "state_class": SensorStateClass.TOTAL,
     },
+    # 原版里的两个“图表实体”
     {
         "key": "recent_30_daily_ele_list",
         "name": "最近30天每日用电",
@@ -171,12 +181,16 @@ SENSOR_TYPES = [
         "name": "最近刷新时间",
     },
 ]
+
 SENSOR_TYPES_FOR_LADDER = [
     {
         "key": "ladder_level",
         "name": "当前阶梯",
     },
 ]
+
+# ================== 实体创建 ==================
+
 async def async_setup_entry(
     hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
 ) -> None:
@@ -184,8 +198,10 @@ async def async_setup_entry(
     coordinator = StateGridCoordinator(hass)
     data_client.coordinator = coordinator
     await coordinator.async_config_entry_first_refresh()
+
     door_account_list = data_client.get_door_account_list()
     entities: list[StateGridSensor] = []
+
     for door_account in door_account_list:
         for sensor_type in SENSOR_TYPES:
             entities.append(
@@ -193,13 +209,27 @@ async def async_setup_entry(
                     door_account, sensor_type, entry.entry_id, coordinator
                 )
             )
+        # 阶梯功能后面需要再开，可在这里判断 door_account["ladder_flag"] 再添加
+        # if door_account["ladder_flag"] == 1:
+        #     for sensor_type in SENSOR_TYPES_FOR_LADDER:
+        #         entities.append(
+        #             StateGridSensor(
+        #                 door_account, sensor_type, entry.entry_id, coordinator
+        #             )
+        #         )
+
     async_add_entities(entities)
+
+
 class StateGridSensor(CoordinatorEntity[StateGridCoordinator], SensorEntity):
     """单个国家电网传感器实体。"""
+
     _attr_has_entity_name = True
+    # 和原版一样，这三个字段变化不记录进 history
     _unrecorded_attributes = frozenset(
         {"recent_30_daily_ele_list", "recent_12_monthly_ele_list", "refresh_time"}
     )
+
     def __init__(
         self,
         door_account,
@@ -210,21 +240,27 @@ class StateGridSensor(CoordinatorEntity[StateGridCoordinator], SensorEntity):
         super().__init__(coordinator)
         self.door_account = door_account
         self.sensor_type = sensor_type
+
         cons_no = door_account["consNo_dst"]
         key = sensor_type["key"]
+
         self.entity_id = (
             SENSOR_DOMAIN + ".state_grid" + "_" + cons_no + "_" + key
         )
         self._attr_name = sensor_type["name"]
         self._attr_unique_id = entry_id + "-" + cons_no + "-" + key
+
         if "device_class" in sensor_type:
             self._attr_device_class = sensor_type["device_class"]
+
         if "state_class" in sensor_type:
             self._attr_state_class = sensor_type["state_class"]
+
         if "native_unit_of_measurement" in sensor_type:
             self._attr_native_unit_of_measurement = sensor_type[
                 "native_unit_of_measurement"
             ]
+
         self._attr_device_info = {
             "name": door_account["elecAddr_dst"],
             "identifiers": {(DOMAIN, cons_no)},
@@ -232,6 +268,7 @@ class StateGridSensor(CoordinatorEntity[StateGridCoordinator], SensorEntity):
             "manufacturer": "国家电网",
             "model": "户号：" + door_account["consName_dst"] + " - " + cons_no,
         }
+
     @property
     def native_value(self):
         """主状态值。
@@ -241,16 +278,22 @@ class StateGridSensor(CoordinatorEntity[StateGridCoordinator], SensorEntity):
         """
         data = self.coordinator.data[self.door_account["consNo_dst"]]
         key = self.sensor_type["key"]
+
         if key in ("recent_30_daily_ele_list", "recent_12_monthly_ele_list"):
             return "图表"
+
         return data[key]
+
     @property
     def extra_state_attributes(self):
         """图表实体附加 graph 属性（和原版保持一致）。"""
         data = self.coordinator.data[self.door_account["consNo_dst"]]
         key = self.sensor_type["key"]
+
         if key == "recent_30_daily_ele_list":
             return {"graph": data.get("recent_30_daily_ele_list", [])}
         elif key == "recent_12_monthly_ele_list":
             return {"graph": data.get("recent_12_monthly_ele_list", [])}
+
+        # 其它实体不加额外属性
         return {}
