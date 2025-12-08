@@ -108,7 +108,10 @@ def remove_python_comments(content):
 def process_file(filepath, backup=True, dry_run=False):
     """处理单个文件"""
     try:
-        with open(filepath, 'r', encoding='utf-8') as f:
+        # 将Path对象转换为字符串
+        filepath_str = str(filepath)
+        
+        with open(filepath_str, 'r', encoding='utf-8') as f:
             content = f.read()
         
         original_content = content
@@ -119,28 +122,28 @@ def process_file(filepath, backup=True, dry_run=False):
             lines_removed = original_content.count('\n') - new_content.count('\n')
             
             if dry_run:
-                print(f"[DRY RUN] 将修改: {filepath} (删除约 {lines_removed} 行)")
+                print(f"[DRY RUN] 将修改: {filepath_str} (删除约 {lines_removed} 行)")
                 return True, lines_removed
             
             # 备份原文件
             if backup:
-                backup_path = filepath + '.bak'
-                shutil.copy2(filepath, backup_path)
+                backup_path = filepath_str + '.bak'
+                shutil.copy2(filepath_str, backup_path)
                 print(f"已备份原文件到: {backup_path}")
             
             # 写入新内容
-            with open(filepath, 'w', encoding='utf-8') as f:
+            with open(filepath_str, 'w', encoding='utf-8') as f:
                 f.write(new_content)
             
-            print(f"已处理: {filepath} (删除了 {lines_removed} 行注释)")
+            print(f"已处理: {filepath_str} (删除了 {lines_removed} 行注释)")
             return True, lines_removed
         else:
             if not dry_run:
-                print(f"无变化: {filepath}")
+                print(f"无变化: {filepath_str}")
             return False, 0
     
     except Exception as e:
-        print(f"处理文件 {filepath} 时出错: {e}")
+        print(f"处理文件 {filepath_str} 时出错: {e}")
         return False, 0
 
 def process_directory(directory='.', extensions=('.py',), 
@@ -153,12 +156,12 @@ def process_directory(directory='.', extensions=('.py',),
     directory = Path(directory)
     
     if recursive:
-        file_generator = directory.rglob('*.py')
+        file_generator = directory.rglob('*')
     else:
-        file_generator = directory.glob('*.py')
+        file_generator = directory.glob('*')
     
     for filepath in file_generator:
-        if filepath.suffix.lower() in extensions:
+        if filepath.is_file() and filepath.suffix.lower() in extensions:
             if filepath.name.endswith('.bak'):
                 continue  # 跳过备份文件
             
