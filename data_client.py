@@ -107,7 +107,7 @@ _D=None
 _C='serviceCode'
 _B='funcCode'
 _A='data'
-import json,time,urllib.parse,datetime
+import json,time,urllib.parse,datetime,re
 from.const import VERSION
 from.utils.logger import LOGGER
 from.utils.store import async_save_to_store
@@ -116,6 +116,20 @@ import hashlib
 import io,base64
 from PIL import Image
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
+_LOGIN_ERROR_FALLBACK='登录失败，请检查账号密码'
+_SENSITIVE_ERROR_PATTERNS=((re.compile(r'(?<!\d)1[3-9]\d{9}(?!\d)'),'<redacted phone>'),(re.compile(r'(?<!\d)\d{13,}(?!\d)'),'<redacted number>'))
+def _redact_error_detail(value):
+	A=str(value)
+	for B,C in _SENSITIVE_ERROR_PATTERNS:A=B.sub(C,A)
+	return ' '.join(A.split())[:500]
+def format_login_error(result):
+	A=result
+	if not isinstance(A,dict):return _LOGIN_ERROR_FALLBACK
+	B=[];C=A.get(_G);D=A.get(_I);E=A.get(_y)or A.get('message')or A.get('msg')
+	if C not in(_D,''):B.append(f"errcode={C}")
+	if D not in(_D,'')and D!=C:B.append(f"code={D}")
+	if E not in(_D,''):B.append(_redact_error_detail(E))
+	return '，'.join(B)if B else _LOGIN_ERROR_FALLBACK
 MAX_RETRIES=3
 configuration={_Q:{_l:_M,_m:'',_n:'',_o:_AN},_E:_U,_T:'32101',_H:_M,_AM:_M,'toPublish':_a,'siteId':'2012000000033700',_L:'',_O:'',_B:'',_C:{_u:_e,'uploadPic':'0101296','pauseSCode':'0101250','pauseTCode':'0101251','listconsumers':'0101093','messageList':'0101343','submit':'0101003','sbcMsg':'0101210','powercut':'0104514','BkAuth01':'f15','BkAuth02':'f18','BkAuth03':'f02','BkAuth04':'f17','BkAuth05':'f05','BkAuth06':'f16','BkAuth07':'f01','BkAuth08':'f03'},'electricityArchives':{'servicecode':'0104505',_E:_M},'subscriptionList':{_L:'APP_SGPMS_05_030',_O:'22',_H:_M,_B:'22',_T:'-1'},'userInformation':{_C:'01008183',_E:_U},'userInform':{_C:_p,_E:_U},'elesum':{_H:_M,_B:_v,_b:_F,_R:_F,_C:'0101143',_E:_w},_j:{_H:_M,_B:'WEBA1007200'},_Ac:{_E:_M,_T:'-1',_H:_q,_AM:_q,_C:_A7,_B:'WEBA40050000',_Q:{_l:_M,_m:'',_n:'',_o:_AN}},'doorAuth':{_E:_U,_C:'f04'},'xinZ':{_K:'101',_Ad:'101','fJ_busiTypeCode':'102',_Ae:'03','fJ_custType':'02',_Af:_a,_P:'',_B:_AO,_u:_e,_E:_U,_A8:_F},'onedo':{_C:_AE,_E:_U,_B:_AO,'queryType':'03'},'xinHuTongDian':{_K:'110',_J:'211',_P:'21102',_B:'WEBA10071200',_H:_M,_E:_q,_C:_p},'company':{_K:'104',_B:_AO,_Af:'02',_A8:_F,_r:_F,_E:_U,_u:_e},'charge':{_H:_q,_B:'WEBA10071300',_AM:'0901',_K:'102',_Ae:_a,_Ad:'102'},'other':{_H:_q,_B:'WEBA10079700',_K:'129',_J:'999',_P:'21501',_C:_x,_L:'',_O:''},'vatchange':{'submit':'0101003',_J:'320',_P:'',_K:'115',_B:'WEBA10074000',_r:_F},'bill':{_c:_F,_B:_v,_R:_F,_C:_x},_k:{_H:_M,_B:_v,_R:_F,_c:_q,_C:_x,_E:_w},_d:{_H:_M,_c:'11',_B:_v,_b:_F,_R:_F,_C:_x,_E:_w},'mouthOut':{_H:_M,_c:'11',_B:_v,_b:_F,_R:_F,_C:_x,_E:_w},'meter':{_K:'114',_J:'304',_B:'WEBA10071000',_P:'',_C:_AE,_O:''},'complaint':{_J:'005','srvMode':_M,'anonymousFlag':'0','replyMode':_a,'retvisitFlag':_a},'report':{_J:'006'},'tradewinds':{_J:'019'},'somesay':{_J:'091'},'faultrepair':{_B:_Ag,_C:_p,_K:'111',_J:'001',_P:'21505'},'electronicInvoice':{_K:'105',_J:'0'},'rename':{_C:_AE,_B:'WEBA10076100',_J:'210',_K:'109',_r:_F,'gh_busiTypeCode':'211','gh_subusi':'21101',_O:'',_L:''},'pause':{_P:'',_C:_A7,_B:'WEBA10073600',_K:'107',_J:'203','jr_busi':'201',_O:'',_L:''},'capacityRecovery':{_C:_A7,_E:_U,_L:'',_O:'',_B:'WEBA10073700','busiTypeCode_stop':'204','busiTypeCode_less':'202',_J:'202',_P:'',_K:'108',_AP:'5',_r:_F},'electricityPriceChange':{_C:_p,_J:'215',_P:'21502',_K:'113',_r:_F,_AP:'15',_B:'WEBA10073900WEB',_L:'',_O:''},'electricityPriceStrategyChange':{_C:'01008183',_J:'215',_P:'21506',_K:'160',_B:'WEBV00000517WEB',_L:'',_O:''},'eemandValueAdjustment':{_C:_p,_L:'',_O:'',_K:'112',_B:'WEBA10073800',_J:'215',_P:'21504',_r:_F,_AP:'5','getMonthServiceCode':_AE},'businessProgress':{_C:_p,_L:_a,_B:'WEB01'},'increase':{_E:_U,_O:'',_L:'',_Ah:_A7,_C:_e,_u:_e,_B:_AQ,_A8:_F,_K:'106',_J:'111',_P:''},'fjincrea':{_K:'105',_J:'110',_P:'',_E:_U,_B:_AQ,_O:'',_L:'',_Ah:_A7,_C:_e,_u:_e,_A8:_F},'persIncrea':{_K:'105',_J:'109',_u:_e,_P:'',_E:_U,_B:_AQ,_A8:_F},'fgdChange':{_C:_p,_L:_a,_H:_q,_B:_Ag,_J:'215',_P:'21505',_K:'111',_r:_F},'createOrder':{_H:_M,_B:_v,_L:'BCP_000001','chargeMode':'02','conType':_a,'bizTypeId':'BT_ELEC'},'largePopulation':{_J:'383',_B:'WEBA10076800',_P:'',_L:'',_R:'',_b:'',_H:'0901',_K:'383',_C:'',_O:''},'biaoJiCode':{_C:'0104507',_E:'1704',_H:'1704'},'twoGuar':{_J:'402',_P:'40201',_B:'web_twoGuar'},'electTrend':{_C:_Ai,_H:_M},'emergency':{_C:_Ai,_B:'A10000000',_H:_M},'infoPublic':{_C:'2545454',_E:_w}}
 appKey='7e5b5e84ddad4994b0ebc68dedca4962'
@@ -190,7 +204,7 @@ def find_max_rectangle(matrix):
 			B.append(A)
 	return H
 class StateGridDataClient:
-	hass=_D;coordinator=_D;session=_D;dataVersion=_D;keyCode=_D;publicKey=_D;need_login=_N;phone=_D;codeKey=_D;serialNo=_D;qrCodeSerial=_D;userInfo=_D;accountInfo=_D;powerUserList=_D;doorAccountDict={};cookie=[];timestamp=int(time.time()*1000);accessToken=_D;refreshToken=_D;token=_D;expirationDate=_D;refresh_interval=8;is_debug=_N;shown_notification=_N
+	hass=_D;coordinator=_D;session=_D;dataVersion=_D;keyCode=_D;publicKey=_D;need_login=_N;phone=_D;codeKey=_D;serialNo=_D;qrCodeSerial=_D;userInfo=_D;accountInfo=_D;powerUserList=_D;doorAccountDict={};cookie=[];timestamp=int(time.time()*1000);accessToken=_D;refreshToken=_D;token=_D;expirationDate=_D;refresh_interval=8;is_debug=_N;shown_notification=_N;last_login_error=_D
 	def __init__(A,hass,config=_D):
 		B=config;A.hass=hass
 		if B is not _D:
@@ -224,8 +238,9 @@ class StateGridDataClient:
 		if 10015==A or 10108==A or 10009==A or 10207==A or 10005==A or 10010==A or 30010==A or 10002==A:B.need_login=_V;return _V
 		return _N
 	async def __try_password_login(A):
-		B=await A.password_login(A.account,A.password,_V,3)
-		if _G in B and B[_G]==0:A.need_login=_N;A.shown_notification=_N;await A.save_data()
+		B=await A.password_login(A.account,A.password,_V,0)
+		if _G in B and B[_G]==0:A.need_login=_N;A.shown_notification=_N;A.last_login_error=_D;await A.save_data()
+		else:A.last_login_error=format_login_error(B);LOGGER.warning('国家电网登录失败: %s',A.last_login_error)
 	async def __fetch(A,api,data,header=_D):
 		R='encryptData';Q='client_secret';P='application/json;charset=UTF-8';O='Content-Type';M=header;J='client_id';D=api;A.timestamp=int(time.time()*1000);E=A.timestamp
 		if A.keyCode is _D:A.keyCode=e(32,16,2)
@@ -352,7 +367,9 @@ class StateGridDataClient:
 		B.need_login=_N;await B.save_data();return{_G:0}
 	def _show_token_notification(A):
 		if A.shown_notification==_V:return
-		A.shown_notification=_V;B='国家电网登录失败，将在下个轮询重试';persistent_notification.create(A.hass,B,title='国家电网 - 登录失败');LOGGER.error(B)
+		A.shown_notification=_V;B='国家电网登录失败，将在下个轮询重试'
+		if A.last_login_error:B=f"{B}：{A.last_login_error}"
+		persistent_notification.create(A.hass,B,title='国家电网 - 登录失败');LOGGER.error(B)
 	async def refresh_data(C,force_refresh=_N):
 		A5='recent_12_monthly_ele_list';A4='recent_30_daily_ele_list';A3='monthEleCost';A2='last_month_ele_cost';A1='year_ele_cost';A0='%Y%m%d';z='daily_lasted_date';y='isMent';f=force_refresh;e='monthEleNum';d='last_month_ele_num';T='year_ele_num';S='yearTotalCost';R='day';J='year_bill_list';I='balance'
 		try:
