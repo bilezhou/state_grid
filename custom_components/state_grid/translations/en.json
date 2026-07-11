@@ -1,0 +1,23 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "title": "State Grid Configuration",
+        "description": "Enter your State Grid account information",
+        "data": {
+          "account": "Phone Number/Account",
+          "password": "Password"
+        }
+      }
+    },
+    "error": {
+      "cannot_connect": "Unable to connect to State Grid server",
+      "invalid_auth": "Invalid username or password",
+      "unknown": "Unknown error"
+    },
+    "abort": {
+      "already_configured": "This account is already configured",
+      "single_instance_allowed": "Only one instance can be configured"
+    }
+  }
+}
