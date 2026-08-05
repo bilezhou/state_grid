@@ -34,11 +34,19 @@ def build_login_error_result(response: Any, fallback_message: Any = None) -> dic
     if not _present(original_code):
         original_code = service_dict.get("code")
     if not _present(original_code):
+        service_errcode = service_dict.get("errcode")
+        if service_errcode not in _WRAPPER_FAILURE_CODES and _present(service_errcode):
+            original_code = service_errcode
+    if not _present(original_code):
         original_code = response_dict.get("resultCode")
     if not _present(original_code):
         top_level_code = response_dict.get("code")
         if top_level_code not in _WRAPPER_FAILURE_CODES and _present(top_level_code):
             original_code = top_level_code
+    if not _present(original_code):
+        top_level_errcode = response_dict.get("errcode")
+        if top_level_errcode not in _WRAPPER_FAILURE_CODES and _present(top_level_errcode):
+            original_code = top_level_errcode
 
     message = (
         service_dict.get("resultMessage")

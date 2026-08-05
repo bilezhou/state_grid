@@ -62,6 +62,33 @@ class LoginErrorTests(unittest.TestCase):
         self.assertIn("code=RISK_CONTROL", risk_control_text)
         self.assertNotIn("errcode=1", risk_control_text)
 
+    def test_top_level_upstream_errcode_is_preserved(self):
+        wrapped = LOGIN_ERROR.build_login_error_result(
+            {"errcode": 429, "errmsg": "操作频繁"}
+        )
+        rendered = LOGIN_ERROR.format_login_error(wrapped)
+
+        self.assertEqual(wrapped["original_code"], 429)
+        self.assertEqual(rendered, "code=429，操作频繁")
+        self.assertNotIn("errcode=1", rendered)
+
+    def test_nested_upstream_errcode_is_preserved(self):
+        wrapped = LOGIN_ERROR.build_login_error_result(
+            {
+                "code": 1,
+                "data": {
+                    "srvrt": {
+                        "errcode": "CAPTCHA_REQUIRED",
+                        "errmsg": "需要验证码",
+                    }
+                },
+            }
+        )
+        rendered = LOGIN_ERROR.format_login_error(wrapped)
+
+        self.assertEqual(wrapped["original_code"], "CAPTCHA_REQUIRED")
+        self.assertEqual(rendered, "code=CAPTCHA_REQUIRED，需要验证码")
+
     def test_wrapper_errcode_one_is_hidden_without_an_original_code(self):
         rendered = LOGIN_ERROR.format_login_error(
             {"errcode": 1, "errmsg": "上游暂时不可用"}
