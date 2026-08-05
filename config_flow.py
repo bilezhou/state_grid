@@ -4,7 +4,7 @@ from homeassistant.core import callback
 from homeassistant.helpers.selector import selector
 from .const import DOMAIN
 from .utils.logger import LOGGER
-from .data_client import StateGridDataClient, format_login_error
+from .patched_data_client import StateGridDataClient, format_login_error
 class StateGridOnnxConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     """国家电网（ONNX）集成的配置向导。"""
     VERSION = 1

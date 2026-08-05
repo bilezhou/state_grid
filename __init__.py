@@ -3,7 +3,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.const import Platform
 from .const import DOMAIN
 from .utils.store import async_load_from_store
-from .data_client import StateGridDataClient
+from .patched_data_client import StateGridDataClient
 PLATFORMS: list[Platform] = [Platform.SENSOR]
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """当用户在 UI 里点击“添加集成”并完成配置时调用。"""
