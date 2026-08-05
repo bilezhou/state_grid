@@ -1,0 +1,23 @@
+{
+  "title": "国家电网(ONNX版)",
+  "config": {
+    "step": {
+      "user": {
+        "title": "登录国家电网",
+        "description": "请输入国家电网账号和密码。",
+        "data": {
+          "account": "账号",
+          "password": "密码"
+        }
+      }
+    },
+    "error": {
+      "invalid_auth": "请输入账号和密码",
+      "cannot_connect": "无法连接国家电网，请稍后重试",
+      "login_failed": "国家电网返回错误：{error}"
+    },
+    "abort": {
+      "single_instance_allowed": "国家电网(ONNX版) 只能配置一个实例"
+    }
+  }
+}

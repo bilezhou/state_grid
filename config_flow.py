@@ -4,7 +4,7 @@ from homeassistant.core import callback
 from homeassistant.helpers.selector import selector
 from .const import DOMAIN
 from .utils.logger import LOGGER
-from .data_client import StateGridDataClient
+from .patched_data_client import StateGridDataClient, format_login_error
 class StateGridOnnxConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     """国家电网（ONNX）集成的配置向导。"""
     VERSION = 1
@@ -15,6 +15,7 @@ class StateGridOnnxConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         if self.hass.data.get(DOMAIN):
             return self.async_abort(reason="single_instance_allowed")
         errors: dict[str, str] = {}
+        description_placeholders: dict[str, str] = {}
         account: str = ""
         password: str = ""
         if user_input is not None:
@@ -25,8 +26,8 @@ class StateGridOnnxConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             else:
                 dc = StateGridDataClient(hass=self.hass, config=None)
                 try:
-                    LOGGER.debug("开始使用 ONNX 滑块登录国家电网，账号=%s", account)
-                    result = await dc.password_login(account, password, encode=False, retry=3)
+                    LOGGER.debug("开始使用 ONNX 滑块登录国家电网")
+                    result = await dc.password_login(account, password, encode=False, retry=0)
                 except Exception as exc:
                     LOGGER.error("国家电网登录异常: %s", exc)
                     errors["base"] = "cannot_connect"
@@ -40,13 +41,10 @@ class StateGridOnnxConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                         title = f"国家电网(ONNX) - {account}"
                         return self.async_create_entry(title=title, data={})
                     else:
-                        errmsg = (
-                            result.get("errmsg")
-                            or result.get("message")
-                            or "登录失败，请检查账号密码"
-                        )
+                        errmsg = format_login_error(result)
                         LOGGER.warning("国家电网登录失败: %s", errmsg)
-                        errors["base"] = "invalid_auth"
+                        errors["base"] = "login_failed"
+                        description_placeholders["error"] = errmsg
         data_schema = vol.Schema(
             {
                 vol.Required("account", default=account): selector(
@@ -61,6 +59,7 @@ class StateGridOnnxConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             step_id="user",
             data_schema=data_schema,
             errors=errors,
+            description_placeholders=description_placeholders,
         )
     @staticmethod
     @callback

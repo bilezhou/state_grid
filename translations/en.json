@@ -1,0 +1,23 @@
+{
+  "title": "State Grid (ONNX)",
+  "config": {
+    "step": {
+      "user": {
+        "title": "Log in to State Grid",
+        "description": "Enter your State Grid account and password.",
+        "data": {
+          "account": "Account",
+          "password": "Password"
+        }
+      }
+    },
+    "error": {
+      "invalid_auth": "Enter both account and password",
+      "cannot_connect": "Cannot connect to State Grid. Please try again later",
+      "login_failed": "State Grid returned an error: {error}"
+    },
+    "abort": {
+      "single_instance_allowed": "Only one State Grid (ONNX) instance can be configured"
+    }
+  }
+}
