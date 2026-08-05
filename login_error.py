@@ -27,7 +27,10 @@ def build_login_error_result(response: Any, fallback_message: Any = None) -> dic
     response_dict = response if isinstance(response, dict) else {}
     data = response_dict.get("data")
     data_dict = data if isinstance(data, dict) else {}
+
     service = data_dict.get("srvrt")
+    if not isinstance(service, dict):
+        service = response_dict.get("srvrt")
     service_dict = service if isinstance(service, dict) else {}
 
     original_code = service_dict.get("resultCode")
